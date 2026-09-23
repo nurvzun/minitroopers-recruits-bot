@@ -40,7 +40,14 @@ async function createOne(browser, index) {
     await page.locator("li.trooper").first().click();
     await page.locator("#name").fill(name);
     await page.locator("#submit:not([disabled])").click({ timeout: 20000 });
-    await page.waitForLoadState("domcontentloaded");
+    const outcome = await Promise.race([
+      page.waitForURL("**/hq", { timeout: 20000, waitUntil: "commit" }).then(() => "hq"),
+      page.getByText("Maximum number of armies reached").waitFor({ timeout: 20000 }).then(() => "max"),
+    ]);
+    if (outcome === "max") {
+      console.log(`${index}/${COUNT}  ${name}  STOP  maximum number of armies reached for this device`);
+      return { name, ok: false, stop: true };
+    }
     await page.waitForTimeout(1200);
     const url = page.url();
     console.log(`${index}/${COUNT}  ${name}  ${url}`);
@@ -61,7 +68,9 @@ const browser = await chromium.launch({
 const results = [];
 try {
   for (let i = 1; i <= COUNT; i++) {
-    results.push(await createOne(browser, i));
+    const result = await createOne(browser, i);
+    results.push(result);
+    if (result.stop) break;
   }
 } finally {
   await browser.close();
