@@ -1,0 +1,11 @@
+{
+  "name": "minitroopers-recruits-bot",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node create-armies.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.55.0"
+  }
+}
